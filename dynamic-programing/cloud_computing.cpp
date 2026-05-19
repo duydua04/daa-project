@@ -41,39 +41,40 @@ ProblemData readInputFile(const string& filename) {
     ifstream file(filename);
     
     if (!file.is_open()) {
-        cerr << "Error: Cannot open file " << filename << endl;
+        cerr << "Error: Không thể mở được file" << filename << endl;
         return data;
     }
     
     string line;
     
     while (getline(file, line)) {
-        // Skip empty lines and comments
+        // Bỏ qua các dòng không có gì
         if (line.empty()) continue;
         
-        // Trim leading whitespace
+        // Bỏ qua các khoảng trắng
         size_t start = line.find_first_not_of(" \t\r\n");
         if (start == string::npos) continue;
         
-        // Skip comment lines
+        // Bỏ qua các dòng comment
         if (line[start] == '#') continue;
         
-        // Extract the actual content
+        // Trích xuất các dữ liệu
         string content = line.substr(start);
         
         if (content.find("C_max") != string::npos) {
             if (sscanf(content.c_str(), "C_max = %d", &data.C_max) != 1) {
-                cerr << "Warning: Failed to parse C_max from line: " << content << endl;
+                cerr << "Cảnh báo: Không thể trích xuất C_max: " << content << endl;
             }
         } else if (content.find("R_max") != string::npos) {
             if (sscanf(content.c_str(), "R_max = %d", &data.R_max) != 1) {
-                cerr << "Warning: Failed to parse R_max from line: " << content << endl;
+                cerr << "Cảnh báo: Không thể trích xuất R_max: " << content << endl;
             }
         } else if (content.find("B_max") != string::npos) {
             if (sscanf(content.c_str(), "B_max = %d", &data.B_max) != 1) {
-                cerr << "Warning: Failed to parse B_max from line: " << content << endl;
+                cerr << "Cảnh báo: Không thể trích xuất B_max: " << content << endl;
             }
         } else {
+            // Đọc các bản ghi: ID, CPU, RAM, Bandwidth
             Request req;
             if (sscanf(content.c_str(), "%d %d %d %d %d", 
                        &req.id, &req.cpu, &req.ram, &req.bandwidth, &req.value) == 5) {
@@ -88,7 +89,7 @@ ProblemData readInputFile(const string& filename) {
     return data;
 }
 
-// State represented as a single 64-bit integer for hash key
+// State: Trạng thái là 1 dãy số nguyên 64 bit để cho mã hóa
 // High 21 bits: CPU, middle 21 bits: RAM, low 21 bits: Bandwidth
 using State = uint64_t;
 using ItemMask = uint64_t;
@@ -104,8 +105,8 @@ void parseState(State s, int& c, int& r, int& b) {
 }
 
 /**
- * Memory-optimized DP using hash map for sparse states
- * Only stores reachable states
+ * DP với tối ưu bộ nhớ sử dụng hashmap để lưu trữ trạng thái
+ * Chỉ lưu trữ các trạng thái có thể đạt được với giá trị tối đa tương ứng
  * 
  * State: (cpu_used, ram_used, bandwidth_used)
  * Value: (max_value, selected_items_bitmask)
@@ -116,17 +117,17 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
     int B = data.B_max;
     int N = data.N;
     
-    // Use unordered_map for sparse state storage
+    // unordered_map để lưu trữ trạng thái và giá trị tối đa tương ứng 
     unordered_map<State, pair<int, ItemMask>> prev, curr;
     
-    // Initial state: nothing selected, 0 resources used
+    // Trạng thái ban đầu
     prev[makeState(0, 0, 0)] = {0, 0};
     
     for (int i = 0; i < N; i++) {
         Request& req = data.requests[i];
         curr.clear();
         
-        // Reserve space to avoid rehashing
+        // 
         curr.reserve(prev.size() * 2);
         
         for (auto& [state, val] : prev) {
@@ -135,14 +136,14 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
             int value = val.first;
             ItemMask selected = val.second;
             
-            // Option 1: Don't select item i
+            // TH1: không chọn item i
             State s1 = state;
             auto it1 = curr.find(s1);
             if (it1 == curr.end() || it1->second.first < value) {
                 curr[s1] = {value, selected};
             }
             
-            // Option 2: Select item i (if enough capacity)
+            // TH2: chọn item i (nếu đủ dung lượng)
             int nc = c + req.cpu;
             int nr = r + req.ram;
             int nb = b + req.bandwidth;
@@ -162,7 +163,7 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
         swap(prev, curr);
     }
     
-    // Find maximum value
+    // Tìm giá trị tối đa và các item được chọn từ prev
     int maxValue = 0;
     ItemMask bestSelected = 0;
     
@@ -173,7 +174,7 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
         }
     }
     
-    // Extract selected items from bitmask
+    // Giải mã các item được chọn từ bitmask
     vector<int> selectedItems;
     
     for (int i = 0; i < N && i < 63; i++) {
@@ -191,7 +192,7 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
     cout << "Results for: " << filename << endl;
     cout << "========================================" << endl;
     
-    // Calculate total resources used
+    // Tính tổng tài nguyên đã sử dụng
     int totalCPU = 0, totalRAM = 0, totalBW = 0;
     for (int id : selectedItems) {
         for (const auto& req : data.requests) {
