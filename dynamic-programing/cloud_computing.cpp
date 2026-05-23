@@ -228,10 +228,10 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
 
 int main(int argc, char* argv[]) {
     vector<string> files = {
-        "data/knapsack_data_n5.txt",
-        "data/knapsack_data_n10.txt",
-        "data/knapsack_data_n20.txt",
-        "data/knapsack_data_n30.txt"
+        "../data/knapsack_data_n5.txt",
+        "../data/knapsack_data_n10.txt",
+        "../data/knapsack_data_n20.txt",
+        "../data/knapsack_data_n30.txt"
     };
     
     cout << "============================================" << endl;
