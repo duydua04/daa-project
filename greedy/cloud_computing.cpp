@@ -32,7 +32,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
-#include <windows.h>
+// #include <windows.h>
 
 using namespace std;
 
@@ -52,6 +52,20 @@ struct ProblemData {
     int N = 0;
     vector<Request> requests;
 };
+
+struct SolveResult {
+    int maxValue;
+    vector<int> selectedItems;
+    size_t memoryBytes;
+};
+
+static size_t estimateRequestVectorMemory(const vector<Request>& v) {
+    return sizeof(Request) * v.capacity();
+}
+
+static size_t estimateIntVectorMemory(const vector<int>& v) {
+    return sizeof(int) * v.capacity();
+}
 
 ProblemData readInputFile(const string& filename) {
     ProblemData data;
@@ -137,7 +151,7 @@ void computeScores(ProblemData& data) {
 //   return S
 // ============================================================
 
-pair<int, vector<int>> solveKnapsackGreedy(ProblemData& data) {
+SolveResult solveKnapsackGreedy(ProblemData& data) {
     // B1 — Tính đơn giá cho từng yêu cầu
     computeScores(data);
 
@@ -152,6 +166,8 @@ pair<int, vector<int>> solveKnapsackGreedy(ProblemData& data) {
     int usedCPU = 0, usedRAM = 0, usedBW = 0;
     int totalValue = 0;
     vector<int> selectedIds;
+    
+    size_t memoryBytes = sizeof(ProblemData) + estimateRequestVectorMemory(data.requests);
 
     // B4 — Vòng lặp Greedy
     for (const auto& req : candidates) {
@@ -171,12 +187,13 @@ pair<int, vector<int>> solveKnapsackGreedy(ProblemData& data) {
         // Nếu không khả thi → bỏ qua, xét ứng viên tiếp theo
     }
 
-    return {totalValue, selectedIds};
+    memoryBytes += estimateRequestVectorMemory(candidates);
+    memoryBytes += estimateIntVectorMemory(selectedIds);
+    return {totalValue, selectedIds, memoryBytes};
 }
 
 
-void printResults(const string& filename, int maxValue,
-                  const vector<int>& selectedItems,
+void printResults(const string& filename, const SolveResult& result,
                   const ProblemData& data, double timeMs) {
     cout << "\n========================================" << endl;
     cout << "Results for: " << filename << endl;
@@ -184,7 +201,7 @@ void printResults(const string& filename, int maxValue,
 
     // Tính tài nguyên đã dùng
     int totalCPU = 0, totalRAM = 0, totalBW = 0;
-    for (int id : selectedItems) {
+    for (int id : result.selectedItems) {
         for (const auto& req : data.requests) {
             if (req.id == id) {
                 totalCPU += req.cpu;
@@ -195,9 +212,9 @@ void printResults(const string& filename, int maxValue,
         }
     }
 
-    cout << "Maximum Value    : " << maxValue << endl;
-    cout << "Selected Items (" << selectedItems.size() << " items): ";
-    for (int id : selectedItems) cout << id << " ";
+    cout << "Maximum Value    : " << result.maxValue << endl;
+    cout << "Selected Items (" << result.selectedItems.size() << " items): ";
+    for (int id : result.selectedItems) cout << id << " ";
     cout << endl;
 
     cout << "\nResource Usage:" << endl;
@@ -211,8 +228,13 @@ void printResults(const string& filename, int maxValue,
     if (data.B_max > 0)
         cout << "  Bandwidth: " << totalBW << " / " << data.B_max
              << " (" << (100.0 * totalBW  / data.B_max) << "%)" << endl;
-
-    cout << "\nExecution Time   : " << timeMs << " ms" << endl;
+    cout << "Memory Usage    : " << result.memoryBytes << " bytes";
+    if (result.memoryBytes >= 1024) {
+        cout << " (" << fixed << setprecision(2)
+             << result.memoryBytes / 1024.0 << " KB)";
+    }
+    cout << endl;
+    cout << "\nExecution Time   : " << timeMs << " us" << endl;
     cout << "Time Complexity  : O(N log N) = O(" << data.N
          << " * log " << data.N << ")" << endl;
 
@@ -235,8 +257,8 @@ void printResults(const string& filename, int maxValue,
     int printCount = min((int)sorted.size(), 5);
     for (int i = 0; i < printCount; i++) {
         const auto& r = sorted[i];
-        bool selected = find(selectedItems.begin(), selectedItems.end(), r.id)
-                        != selectedItems.end();
+        bool selected = find(result.selectedItems.begin(), result.selectedItems.end(), r.id)
+                        != result.selectedItems.end();
         cout << left << setw(6)  << r.id
              << setw(8)  << r.cpu
              << setw(8)  << r.ram
@@ -249,13 +271,15 @@ void printResults(const string& filename, int maxValue,
 }
 
 int main() {
-    SetConsoleOutputCP(65001);
+    // SetConsoleOutputCP(65001);
 
     vector<string> files = {
         "data/knapsack_data_n5.txt",
         "data/knapsack_data_n10.txt",
         "data/knapsack_data_n20.txt",
-        "data/knapsack_data_n30.txt"
+        "data/knapsack_data_n30.txt",
+        "data/knapsack_data_n40.txt", // Cảnh báo: N=40 sẽ rất lâu
+        "data/knapsack_data_n50.txt"  // Cảnh báo: N=50 sẽ cực kỳ lâu
     };
 
     cout << "============================================" << endl;
@@ -275,8 +299,8 @@ int main() {
         auto result = solveKnapsackGreedy(data);
         auto end    = chrono::high_resolution_clock::now();
 
-        double timeMs = chrono::duration<double, milli>(end - start).count();
-        printResults(file, result.first, result.second, data, timeMs);
+        double timeMs = chrono::duration<double, micro>(end - start).count();
+        printResults(file, result, data, timeMs);
     }
 
     cout << "\n========================================" << endl;
