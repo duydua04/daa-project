@@ -1,0 +1,62 @@
+# Multi-dimensional Knapsack Problem Dataset
+# Problem: Resource Management in Cloud Computing
+# Number of requests (N): 50
+# Resource limits: C_max (CPU), R_max (RAM), B_max (Bandwidth)
+
+# Server capacity limits
+C_max = 160
+R_max = 320
+B_max = 1000
+
+# Request data: ID, CPU (c_i), RAM (r_i), Bandwidth (b_i), Value (v_i)
+# Header: request_id cpu ram bandwidth value
+1 2 4 10 50
+2 4 8 20 85
+3 3 6 15 60
+4 5 10 25 110
+5 2 4 12 45
+6 6 12 30 130
+7 3 6 18 70
+8 4 8 22 90
+9 1 2 8 35
+10 5 10 28 95
+11 7 14 35 150
+12 2 5 11 55
+13 4 9 19 88
+14 3 7 16 72
+15 6 11 26 125
+16 8 16 40 175
+17 1 3 7 40
+18 5 10 24 105
+19 4 8 21 92
+20 3 6 14 68
+21 9 18 45 190
+22 2 4 9 48
+23 5 10 23 98
+24 4 7 17 78
+25 6 12 29 128
+26 3 6 13 62
+27 7 14 33 145
+28 2 5 10 52
+29 8 15 38 168
+30 4 8 20 86
+31 6 12 32 135
+32 3 5 11 58
+33 5 9 22 102
+34 7 13 34 148
+35 2 4 9 46
+36 4 8 19 84
+37 8 16 42 180
+38 3 6 15 66
+39 6 11 28 122
+40 5 10 26 108
+41 7 14 36 152
+42 2 5 12 56
+43 4 9 21 90
+44 6 11 27 118
+45 3 6 14 64
+46 8 15 39 172
+47 1 3 8 42
+48 5 10 25 106
+49 4 8 20 88
+50 7 13 35 146
