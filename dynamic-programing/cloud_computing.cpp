@@ -17,6 +17,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <map>
+#include <iomanip>
 
 using namespace std;
 
@@ -34,6 +35,12 @@ struct ProblemData {
     int B_max = 0;
     int N = 0;
     vector<Request> requests;
+};
+
+struct SolveResult {
+    int maxValue;
+    vector<int> selectedItems;
+    size_t memoryBytes;
 };
 
 ProblemData readInputFile(const string& filename) {
@@ -94,6 +101,18 @@ ProblemData readInputFile(const string& filename) {
 using State = uint64_t;
 using ItemMask = uint64_t;
 
+static size_t estimateRequestVectorMemory(const vector<Request>& v) {
+    return sizeof(Request) * v.capacity();
+}
+
+static size_t estimateIntVectorMemory(const vector<int>& v) {
+    return sizeof(int) * v.capacity();
+}
+
+static size_t estimateUnorderedMapMemory(const unordered_map<State, pair<int, ItemMask>>& m) {
+    return m.size() * sizeof(decltype(*m.begin())) + m.bucket_count() * sizeof(void*);
+}
+
 State makeState(int c, int r, int b) {
     return ((State)c << 42) | ((State)r << 21) | (State)b;
 }
@@ -111,7 +130,7 @@ void parseState(State s, int& c, int& r, int& b) {
  * State: (cpu_used, ram_used, bandwidth_used)
  * Value: (max_value, selected_items_bitmask)
  */
-pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
+SolveResult solveKnapsackDP(ProblemData& data) {
     int C = data.C_max;
     int R = data.R_max;
     int B = data.B_max;
@@ -122,6 +141,8 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
     
     // Trạng thái ban đầu
     prev[makeState(0, 0, 0)] = {0, 0};
+    
+    size_t peakMemory = estimateRequestVectorMemory(data.requests) + sizeof(ProblemData);
     
     for (int i = 0; i < N; i++) {
         Request& req = data.requests[i];
@@ -159,7 +180,11 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
                 }
             }
         }
-        
+
+        size_t currentMemory = estimateUnorderedMapMemory(prev)
+                             + estimateUnorderedMapMemory(curr)
+                             + estimateRequestVectorMemory(data.requests);
+        peakMemory = max(peakMemory, currentMemory);
         swap(prev, curr);
     }
     
@@ -182,11 +207,12 @@ pair<int, vector<int>> solveKnapsackDP(ProblemData& data) {
             selectedItems.push_back(data.requests[i].id);
         }
     }
-    
-    return {maxValue, selectedItems};
+
+    size_t memoryBytes = peakMemory + estimateIntVectorMemory(selectedItems);
+    return {maxValue, selectedItems, memoryBytes};
 }
 
-void printResults(const string& filename, int maxValue, const vector<int>& selectedItems, 
+void printResults(const string& filename, const SolveResult& result, 
                   const ProblemData& data, double timeMs) {
     cout << "\n========================================" << endl;
     cout << "Results for: " << filename << endl;
@@ -194,7 +220,7 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
     
     // Tính tổng tài nguyên đã sử dụng
     int totalCPU = 0, totalRAM = 0, totalBW = 0;
-    for (int id : selectedItems) {
+    for (int id : result.selectedItems) {
         for (const auto& req : data.requests) {
             if (req.id == id) {
                 totalCPU += req.cpu;
@@ -205,9 +231,9 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
         }
     }
     
-    cout << "Maximum Value: " << maxValue << endl;
-    cout << "Selected Items (" << selectedItems.size() << " items): ";
-    for (int id : selectedItems) {
+    cout << "Maximum Value: " << result.maxValue << endl;
+    cout << "Selected Items (" << result.selectedItems.size() << " items): ";
+    for (int id : result.selectedItems) {
         cout << id << " ";
     }
     cout << endl;
@@ -219,8 +245,12 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
          << " (" << (100.0 * totalRAM / data.R_max) << "%)" << endl;
     cout << "  Bandwidth: " << totalBW << " / " << data.B_max 
          << " (" << (100.0 * totalBW / data.B_max) << "%)" << endl;
-    
-    cout << "\nExecution Time: " << timeMs << " ms" << endl;
+        cout << "Memory Usage    : " << result.memoryBytes << " bytes";
+    if (result.memoryBytes >= 1024) {
+        cout << " (" << fixed << setprecision(2)
+             << result.memoryBytes / 1024.0 << " KB)";
+    }
+    cout << endl;    cout << "\nExecution Time: " << timeMs << " us" << endl;
     cout << "Time Complexity: O(N * C_max * R_max * B_max) = O(" 
          << data.N << " * " << data.C_max << " * " << data.R_max << " * " << data.B_max 
          << ") = O(" << (long long)data.N * data.C_max * data.R_max * data.B_max << ")" << endl;
@@ -228,10 +258,12 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
 
 int main(int argc, char* argv[]) {
     vector<string> files = {
-        "../data/knapsack_data_n5.txt",
-        "../data/knapsack_data_n10.txt",
-        "../data/knapsack_data_n20.txt",
-        "../data/knapsack_data_n30.txt"
+        "data/knapsack_data_n5.txt",
+        "data/knapsack_data_n10.txt",
+        "data/knapsack_data_n20.txt",
+        "data/knapsack_data_n30.txt",
+        "data/knapsack_data_n40.txt", // Cảnh báo: N=40 sẽ rất lâu
+        "data/knapsack_data_n50.txt"  // Cảnh báo: N=50 sẽ cực kỳ lâu
     };
     
     cout << "============================================" << endl;
@@ -246,8 +278,8 @@ int main(int argc, char* argv[]) {
         auto result = solveKnapsackDP(data);
         auto end = chrono::high_resolution_clock::now();
         
-        double timeMs = chrono::duration<double, milli>(end - start).count();
-        printResults(file, result.first, result.second, data, timeMs);
+        double timeUs = chrono::duration<double, micro>(end - start).count();
+        printResults(file, result, data, timeUs);
     }
     
     cout << "\n========================================" << endl;

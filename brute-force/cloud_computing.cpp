@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <iomanip>
 
 using namespace std;
 
@@ -38,6 +39,20 @@ struct ProblemData {
     int N = 0;
     vector<Request> requests;
 };
+
+struct SolveResult {
+    int maxValue;
+    vector<int> selectedItems;
+    size_t memoryBytes;
+};
+
+static size_t estimateRequestVectorMemory(const vector<Request>& v) {
+    return sizeof(Request) * v.capacity();
+}
+
+static size_t estimateIntVectorMemory(const vector<int>& v) {
+    return sizeof(int) * v.capacity();
+}
 
 ProblemData readInputFile(const string& filename) {
     ProblemData data;
@@ -108,7 +123,7 @@ ProblemData readInputFile(const string& filename) {
  *   bit 3 = 1 → chọn yêu cầu 4
  *   bit 4 = 0 → bỏ yêu cầu 5
  */
-pair<int, vector<int>> solveKnapsackBruteForce(ProblemData& data) {
+SolveResult solveKnapsackBruteForce(ProblemData& data) {
     int C = data.C_max;
     int R = data.R_max;
     int B = data.B_max;
@@ -117,6 +132,8 @@ pair<int, vector<int>> solveKnapsackBruteForce(ProblemData& data) {
     int bestValue = 0;
     long long bestMask = 0;
     long long totalCombinations = 1LL << N;  // 2^N tổ hợp
+    
+    size_t memoryBytes = sizeof(ProblemData) + estimateRequestVectorMemory(data.requests);
     
     // Duyệt tất cả 2^N tổ hợp
     for (long long mask = 0; mask < totalCombinations; mask++) {
@@ -153,10 +170,11 @@ pair<int, vector<int>> solveKnapsackBruteForce(ProblemData& data) {
         }
     }
     
-    return {bestValue, selectedItems};
+    memoryBytes += estimateIntVectorMemory(selectedItems);
+    return {bestValue, selectedItems, memoryBytes};
 }
 
-void printResults(const string& filename, int maxValue, const vector<int>& selectedItems, 
+void printResults(const string& filename, const SolveResult& result, 
                   const ProblemData& data, double timeMs) {
     cout << "\n========================================" << endl;
     cout << "Results for: " << filename << endl;
@@ -164,7 +182,7 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
     
     // Tính tổng tài nguyên đã sử dụng
     int totalCPU = 0, totalRAM = 0, totalBW = 0;
-    for (int id : selectedItems) {
+    for (int id : result.selectedItems) {
         for (const auto& req : data.requests) {
             if (req.id == id) {
                 totalCPU += req.cpu;
@@ -175,9 +193,9 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
         }
     }
     
-    cout << "Maximum Value: " << maxValue << endl;
-    cout << "Selected Items (" << selectedItems.size() << " items): ";
-    for (int id : selectedItems) {
+    cout << "Maximum Value: " << result.maxValue << endl;
+    cout << "Selected Items (" << result.selectedItems.size() << " items): ";
+    for (int id : result.selectedItems) {
         cout << id << " ";
     }
     cout << endl;
@@ -191,7 +209,13 @@ void printResults(const string& filename, int maxValue, const vector<int>& selec
          << " (" << (100.0 * totalBW / data.B_max) << "%)" << endl;
     
     cout << "\nTotal Combinations Checked: 2^" << data.N << " = " << (1LL << data.N) << endl;
-    cout << "Execution Time: " << timeMs << " ms" << endl;
+    cout << "Memory Usage    : " << result.memoryBytes << " bytes";
+    if (result.memoryBytes >= 1024) {
+        cout << " (" << fixed << setprecision(2)
+             << result.memoryBytes / 1024.0 << " KB)";
+    }
+    cout << endl;
+    cout << "Execution Time: " << timeMs << " us" << endl;
     cout << "Time Complexity: O(2^N * N) = O(2^" << data.N << " * " << data.N 
          << ") = O(" << (1LL << data.N) * data.N << ")" << endl;
 }
@@ -201,7 +225,9 @@ int main(int argc, char* argv[]) {
         "data/knapsack_data_n5.txt",
         "data/knapsack_data_n10.txt",
         "data/knapsack_data_n20.txt",
-        "data/knapsack_data_n30.txt"
+        "data/knapsack_data_n30.txt",
+        "data/knapsack_data_n40.txt", // Cảnh báo: N=40 sẽ rất lâu
+        "data/knapsack_data_n50.txt"  // Cảnh báo: N=50 sẽ cực kỳ lâu
     };
     
     cout << "============================================" << endl;
@@ -228,8 +254,8 @@ int main(int argc, char* argv[]) {
         auto result = solveKnapsackBruteForce(data);
         auto end = chrono::high_resolution_clock::now();
         
-        double timeMs = chrono::duration<double, milli>(end - start).count();
-        printResults(file, result.first, result.second, data, timeMs);
+        double timeUs = chrono::duration<double, micro>(end - start).count();
+        printResults(file, result, data, timeUs);
     }
     
     cout << "\n========================================" << endl;
