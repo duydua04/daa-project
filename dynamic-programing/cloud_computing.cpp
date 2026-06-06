@@ -1,12 +1,3 @@
-/**
- * Multi-dimensional Knapsack Problem Solver
- * Using Dynamic Programming (Memory Optimized with Hash Map)
- * 
- * Problem: Resource Management in Cloud Computing
- * - Maximize total value from selected requests
- * - Constraints: CPU, RAM, Bandwidth limits
- */
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -262,8 +253,8 @@ int main(int argc, char* argv[]) {
         "data/knapsack_data_n10.txt",
         "data/knapsack_data_n20.txt",
         "data/knapsack_data_n30.txt",
-        "data/knapsack_data_n40.txt", // Cảnh báo: N=40 sẽ rất lâu
-        "data/knapsack_data_n50.txt"  // Cảnh báo: N=50 sẽ cực kỳ lâu
+        "data/knapsack_data_n40.txt",
+        "data/knapsack_data_n50.txt"
     };
     
     cout << "============================================" << endl;
