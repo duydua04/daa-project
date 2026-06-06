@@ -197,3 +197,285 @@ Việc đánh giá đa tiêu chí giúp so sánh các thuật toán khác nhau v
 ---
 
 # 4. Kết luận
+
+_(Nội dung kết luận sẽ được bổ sung)_
+
+---
+
+# 5. Hướng dẫn cài đặt môi trường
+
+## 5.1. Yêu cầu hệ thống
+
+| Thành phần | Yêu cầu tối thiểu | Ghi chú |
+|---|---|---|
+| **Hệ điều hành** | Windows, Linux hoặc macOS | Windows cần cài MSYS2 để có môi trường tương thích |
+| **Trình biên dịch C++** | `g++` hỗ trợ chuẩn **C++17** | GCC ≥ 7.0 hoặc Clang ≥ 5.0 |
+| **GNU Make** | `make` ≥ 3.81 | Windows: đi kèm MSYS2; Linux/macOS: có sẵn |
+| **Python 3** | Python ≥ 3.6 | Chỉ cần nếu muốn sinh file CSV thống kê |
+| **Git** | Bất kỳ phiên bản nào | Tùy chọn — có thể nhận dự án qua file ZIP |
+
+## 5.2. Cài đặt trên Windows
+
+Trên Windows, cần cài **MSYS2** để có `g++`, `make` và shell bash tương thích với Makefile của dự án.
+
+### Bước 1: Cài đặt MSYS2
+
+1. Tải MSYS2 từ trang chủ: [https://www.msys2.org](https://www.msys2.org)
+2. Chạy file cài đặt và cài vào đường dẫn mặc định (`C:\msys64`).
+3. Sau khi cài xong, mở **MSYS2 UCRT64** (hoặc **MSYS2 MINGW64**) từ Start Menu.
+
+### Bước 2: Cài đặt g++, make và git
+
+Trong cửa sổ MSYS2 terminal, chạy:
+
+```bash
+# Cập nhật hệ thống gói
+pacman -Syu
+
+# Cài đặt g++, make và git
+pacman -S --noconfirm mingw-w64-ucrt-x86_64-gcc make git
+
+# Cài đặt Python 3 (tùy chọn, nếu muốn sinh CSV)
+pacman -S --noconfirm mingw-w64-ucrt-x86_64-python
+```
+
+### Bước 3: Sử dụng
+
+> **Quan trọng:** Luôn mở **MSYS2 UCRT64** terminal để chạy các lệnh `make`, `g++` trong dự án. Không sử dụng CMD hoặc PowerShell vì chúng không tương thích với Makefile.
+
+**Cách thay thế (không cần MSYS2):** Nếu không muốn cài MSYS2, có thể biên dịch thủ công từng file bằng `g++` (xem [Mục 6.4](#64-chạy-từng-phương-pháp) — phần biên dịch thủ công).
+
+## 5.3. Cài đặt trên Ubuntu / Debian
+
+```bash
+# Cập nhật danh sách gói
+sudo apt update
+
+# Cài đặt g++, make và git
+sudo apt install -y build-essential git
+
+# Cài đặt Python 3 (nếu chưa có)
+sudo apt install -y python3
+```
+
+## 5.4. Cài đặt trên macOS
+
+```bash
+# Cài đặt Xcode Command Line Tools (bao gồm clang++ và make)
+xcode-select --install
+
+# Cài đặt Python 3 qua Homebrew (nếu chưa có)
+brew install python3
+```
+
+## 5.5. Lấy mã nguồn dự án
+
+### Cách 1: Clone từ GitHub (nếu có Git)
+
+```bash
+git clone https://github.com/duydua04/daa-project.git
+cd daa-project
+```
+
+### Cách 2: Tải file ZIP và giải nén
+
+Nếu bạn nhận dự án qua file ZIP (không cần cài Git):
+
+1. Giải nén file ZIP vào một thư mục tùy ý.
+2. Mở terminal (MSYS2 trên Windows, Terminal trên Linux/macOS).
+3. Di chuyển vào thư mục dự án:
+
+```bash
+# Thay đường dẫn phù hợp với vị trí bạn giải nén
+cd /đường/dẫn/tới/daa-project
+```
+
+> **Trên Windows (MSYS2):** Đường dẫn `C:\Users\TenBan\Desktop\daa-project` tương đương `/c/Users/TenBan/Desktop/daa-project` trong MSYS2 terminal.
+
+## 5.6. Kiểm tra môi trường
+
+Chạy các lệnh sau để đảm bảo môi trường đã sẵn sàng:
+
+```bash
+# Kiểm tra trình biên dịch C++
+g++ --version
+
+# Kiểm tra Make
+make --version
+
+# Kiểm tra Python 3 (tùy chọn)
+python3 --version
+```
+
+> **Trên Windows (MSYS2):** Nếu `python3` không hoạt động, thử dùng `python --version` thay thế.
+
+---
+
+# 6. Hướng dẫn sử dụng
+
+## 6.1. Cấu trúc dự án
+
+```
+daa-project/
+├── Makefile                         # Tự động biên dịch và chạy
+├── generate_metrics_csv.py          # Script sinh CSV thống kê hiệu năng
+├── data/                            # Bộ dữ liệu đầu vào
+│   ├── knapsack_data_n5.txt
+│   ├── knapsack_data_n10.txt
+│   ├── knapsack_data_n20.txt
+│   ├── knapsack_data_n30.txt
+│   ├── knapsack_data_n40.txt
+│   └── knapsack_data_n50.txt
+├── brute-force/                     # Phương pháp vét cạn
+│   └── cloud_computing.cpp
+├── dynamic-programing/              # Phương pháp quy hoạch động
+│   └── cloud_computing.cpp
+├── greedy/                          # Phương pháp tham lam
+│   └── cloud_computing.cpp
+├── visualization/                   # Biểu đồ so sánh hiệu năng (PNG)
+├── statistics/                      # File CSV thống kê (tự động tạo khi chạy `make csv`)
+└── docs/                            # Tài liệu bổ sung
+```
+
+## 6.2. Định dạng dữ liệu đầu vào
+
+Mỗi file dữ liệu trong thư mục `data/` có định dạng:
+
+```text
+# Multi-dimensional Knapsack Problem Dataset
+# Number of requests (N): 5
+
+# Server capacity limits
+C_max = 16
+R_max = 32
+B_max = 100
+
+# Request data: ID, CPU (c_i), RAM (r_i), Bandwidth (b_i), Value (v_i)
+1 2 4 10 50
+2 4 8 20 80
+3 3 6 15 65
+4 5 10 25 100
+5 2 4 12 45
+```
+
+- Dòng bắt đầu bằng `#` là comment, sẽ bị bỏ qua.
+- `C_max`, `R_max`, `B_max` là giới hạn tài nguyên của hệ thống.
+- Mỗi dòng dữ liệu yêu cầu gồm 5 cột: `ID  CPU  RAM  Bandwidth  Value`.
+
+## 6.3. Biên dịch dự án
+
+### Cách 1: Dùng Make (khuyến nghị)
+
+```bash
+# Biên dịch tất cả các phương pháp
+make all
+```
+
+Lệnh này sẽ biên dịch cả 3 file source và tạo ra các binary tương ứng:
+
+| Binary được tạo | Phương pháp |
+|---|---|
+| `brute-force/cloud_computing` | Vét cạn (Brute Force) |
+| `dynamic-programing/cloud_computing` | Quy hoạch động (Dynamic Programming) |
+| `greedy/cloud_computing` | Tham lam (Greedy) |
+
+Xóa các file đã biên dịch:
+
+```bash
+make clean
+```
+
+### Cách 2: Biên dịch thủ công bằng g++ (không cần Make)
+
+Nếu không có `make` (ví dụ: sử dụng CMD hoặc PowerShell trên Windows), có thể biên dịch trực tiếp:
+
+```bash
+# Biên dịch phương pháp Brute Force
+g++ -std=c++17 -O2 -Wall -o brute-force/cloud_computing brute-force/cloud_computing.cpp
+
+# Biên dịch phương pháp Dynamic Programming
+g++ -std=c++17 -O2 -Wall -o dynamic-programing/cloud_computing dynamic-programing/cloud_computing.cpp
+
+# Biên dịch phương pháp Greedy
+g++ -std=c++17 -O2 -Wall -o greedy/cloud_computing greedy/cloud_computing.cpp
+```
+
+> **Trên Windows CMD/PowerShell:** Thay `/` bằng `\` trong đường dẫn, ví dụ:
+> ```cmd
+> g++ -std=c++17 -O2 -Wall -o brute-force\cloud_computing.exe brute-force\cloud_computing.cpp
+> ```
+
+## 6.4. Chạy từng phương pháp
+
+### 6.4.1. Phương pháp Vét cạn (Brute Force)
+
+```bash
+# Dùng make
+make run-brute-force/cloud_computing
+
+# Chạy thủ công 
+./brute-force/cloud_computing          # Linux / macOS / MSYS2
+brute-force\cloud_computing.exe        # Windows CMD / PowerShell
+```
+
+### 6.4.2. Phương pháp Quy hoạch động (Dynamic Programming)
+
+```bash
+# Dùng make
+make run-dynamic-programing/cloud_computing
+
+# Chạy thủ công (sau khi đã biên dịch)
+./dynamic-programing/cloud_computing   # Linux / macOS / MSYS2
+dynamic-programing\cloud_computing.exe # Windows CMD / PowerShell
+```
+
+### 6.4.3. Phương pháp Tham lam (Greedy)
+
+```bash
+# Dùng make
+make run-greedy/cloud_computing
+
+# Chạy thủ công
+./greedy/cloud_computing               # Linux / macOS / MSYS2
+greedy\cloud_computing.exe             # Windows CMD / PowerShell
+```
+
+
+## 6.5. Chạy tất cả các phương pháp
+
+```bash
+make run-all
+```
+
+Lệnh này sẽ biên dịch và chạy lần lượt cả 3 phương pháp trên tất cả bộ dữ liệu. Kết quả mỗi phương pháp bao gồm:
+
+- **Maximum Value**: tổng giá trị tối đa đạt được.
+- **Selected Items**: danh sách các yêu cầu được chọn.
+- **Resource Usage**: mức sử dụng CPU / RAM / Bandwidth (và tỷ lệ %).
+- **Memory Usage**: bộ nhớ ước tính (bytes).
+- **Execution Time**: thời gian chạy (microseconds).
+
+## 6.6. Sinh file CSV thống kê
+
+```bash
+make csv
+```
+
+Lệnh này sẽ:
+1. Biên dịch tất cả các phương pháp.
+2. Chạy script `generate_metrics_csv.py` để thực thi từng phương pháp.
+3. Xuất các file CSV vào thư mục `statistics/`:
+
+| File CSV | Nội dung |
+|---|---|
+| `maximum_value.csv` | So sánh giá trị tối đa đạt được |
+| `memory_usage.csv` | So sánh mức sử dụng bộ nhớ |
+| `execution_time.csv` | So sánh thời gian thực thi |
+| `cpu_usage.csv` | So sánh mức sử dụng CPU |
+| `ram_usage.csv` | So sánh mức sử dụng RAM |
+| `bandwidth_usage.csv` | So sánh mức sử dụng băng thông |
+
+Mỗi file CSV có cấu trúc: cột đầu là kích thước $N$, các cột tiếp theo là giá trị tương ứng của mỗi phương pháp (Greedy, Dynamic Programming, Brute Force).
+
+---
+

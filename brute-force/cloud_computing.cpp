@@ -1,17 +1,3 @@
-/**
- * Multi-dimensional Knapsack Problem Solver
- * Using Brute Force (Exhaustive Search)
- * 
- * Problem: Resource Management in Cloud Computing
- * - Maximize total value from selected requests
- * - Constraints: CPU, RAM, Bandwidth limits
- * 
- * Approach: Enumerate all 2^N subsets using bitmask,
- *           check constraints and track the best valid subset.
- * Time Complexity: O(2^N * N)
- * Space Complexity: O(N)
- */
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -66,33 +52,26 @@ ProblemData readInputFile(const string& filename) {
     string line;
     
     while (getline(file, line)) {
-        // Bỏ qua các dòng không có gì
         if (line.empty()) continue;
-        
-        // Bỏ qua các khoảng trắng
         size_t start = line.find_first_not_of(" \t\r\n");
         if (start == string::npos) continue;
-        
-        // Bỏ qua các dòng comment
         if (line[start] == '#') continue;
-        
-        // Trích xuất các dữ liệu
         string content = line.substr(start);
         
         if (content.find("C_max") != string::npos) {
             if (sscanf(content.c_str(), "C_max = %d", &data.C_max) != 1) {
-                cerr << "Cảnh báo: Không thể trích xuất C_max: " << content << endl;
+                cerr << "Không thể trích xuất C_max: " << content << endl;
             }
         } else if (content.find("R_max") != string::npos) {
             if (sscanf(content.c_str(), "R_max = %d", &data.R_max) != 1) {
-                cerr << "Cảnh báo: Không thể trích xuất R_max: " << content << endl;
+                cerr << "Không thể trích xuất R_max: " << content << endl;
             }
         } else if (content.find("B_max") != string::npos) {
             if (sscanf(content.c_str(), "B_max = %d", &data.B_max) != 1) {
-                cerr << "Cảnh báo: Không thể trích xuất B_max: " << content << endl;
+                cerr << "Không thể trích xuất B_max: " << content << endl;
             }
         } else {
-            // Đọc các bản ghi: ID, CPU, RAM, Bandwidth, Value
+
             Request req;
             if (sscanf(content.c_str(), "%d %d %d %d %d", 
                        &req.id, &req.cpu, &req.ram, &req.bandwidth, &req.value) == 5) {
@@ -108,20 +87,7 @@ ProblemData readInputFile(const string& filename) {
 }
 
 /**
- * Giải bài toán bằng phương pháp vét cạn (Brute Force)
- * 
- * Ý tưởng:
- * - Duyệt tất cả 2^N tổ hợp con có thể có của N yêu cầu
- * - Mỗi tổ hợp được biểu diễn bằng một bitmask (số nguyên từ 0 đến 2^N - 1)
- * - Với mỗi tổ hợp, tính tổng tài nguyên và kiểm tra ràng buộc
- * - Giữ lại tổ hợp hợp lệ có tổng giá trị lớn nhất
- * 
- * Ví dụ với N=5, mask = 13 (01101 nhị phân):
- *   bit 0 = 1 → chọn yêu cầu 1
- *   bit 1 = 0 → bỏ yêu cầu 2
- *   bit 2 = 1 → chọn yêu cầu 3
- *   bit 3 = 1 → chọn yêu cầu 4
- *   bit 4 = 0 → bỏ yêu cầu 5
+ * Giải bài toán bằng phương pháp vét cạn
  */
 SolveResult solveKnapsackBruteForce(ProblemData& data) {
     int C = data.C_max;
@@ -131,18 +97,16 @@ SolveResult solveKnapsackBruteForce(ProblemData& data) {
     
     int bestValue = 0;
     long long bestMask = 0;
-    long long totalCombinations = 1LL << N;  // 2^N tổ hợp
+    long long totalCombinations = 1LL << N; 
     
     size_t memoryBytes = sizeof(ProblemData) + estimateRequestVectorMemory(data.requests);
     
-    // Duyệt tất cả 2^N tổ hợp
     for (long long mask = 0; mask < totalCombinations; mask++) {
         int totalCPU = 0;
         int totalRAM = 0;
         int totalBW = 0;
         int totalValue = 0;
         
-        // Kiểm tra từng bit trong mask để xác định yêu cầu nào được chọn
         for (int i = 0; i < N; i++) {
             if (mask & (1LL << i)) {
                 totalCPU   += data.requests[i].cpu;
@@ -151,18 +115,13 @@ SolveResult solveKnapsackBruteForce(ProblemData& data) {
                 totalValue += data.requests[i].value;
             }
         }
-        
-        // Kiểm tra ràng buộc tài nguyên: cả 3 chiều đều phải thỏa mãn
         if (totalCPU <= C && totalRAM <= R && totalBW <= B) {
-            // Cập nhật nghiệm tốt nhất nếu tổng giá trị lớn hơn
             if (totalValue > bestValue) {
                 bestValue = totalValue;
                 bestMask = mask;
             }
         }
     }
-    
-    // Giải mã bitmask để lấy danh sách các yêu cầu được chọn
     vector<int> selectedItems;
     for (int i = 0; i < N; i++) {
         if (bestMask & (1LL << i)) {
@@ -180,7 +139,6 @@ void printResults(const string& filename, const SolveResult& result,
     cout << "Results for: " << filename << endl;
     cout << "========================================" << endl;
     
-    // Tính tổng tài nguyên đã sử dụng
     int totalCPU = 0, totalRAM = 0, totalBW = 0;
     for (int id : result.selectedItems) {
         for (const auto& req : data.requests) {
@@ -226,8 +184,8 @@ int main(int argc, char* argv[]) {
         "data/knapsack_data_n10.txt",
         "data/knapsack_data_n20.txt",
         "data/knapsack_data_n30.txt",
-        "data/knapsack_data_n40.txt", // Cảnh báo: N=40 sẽ rất lâu
-        "data/knapsack_data_n50.txt"  // Cảnh báo: N=50 sẽ cực kỳ lâu
+        "data/knapsack_data_n40.txt",
+        "data/knapsack_data_n50.txt"  
     };
     
     cout << "============================================" << endl;
