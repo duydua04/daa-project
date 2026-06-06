@@ -52,161 +52,35 @@ Bài toán này có ý nghĩa thực tiễn rất lớn trong các hệ thống 
 
 # 2. Các thách thức của bài toán
 
-## 2.1. Tài nguyên hệ thống có giới hạn và nhiều ràng buộc đồng thời
-
-Thách thức đầu tiên của bài toán là hệ thống phải quản lý nhiều loại tài nguyên cùng lúc. Trong trường hợp này, các ràng buộc chính gồm CPU, RAM và băng thông. Một yêu cầu chỉ được chấp nhận khi hệ thống còn đủ cả ba loại tài nguyên này. Nếu chỉ còn đủ CPU và RAM nhưng không đủ băng thông, yêu cầu vẫn không thể được phục vụ.
-
-Điều này làm cho bài toán phức tạp hơn nhiều so với bài toán tối ưu một chiều. Trong thực tế, một số ứng dụng có thể tiêu thụ nhiều CPU nhưng ít băng thông, ví dụ các tác vụ tính toán khoa học. Một số ứng dụng khác có thể cần nhiều băng thông nhưng không cần quá nhiều CPU, ví dụ truyền phát video hoặc hệ thống xử lý dữ liệu thời gian thực. Vì vậy, hệ thống cần đánh giá yêu cầu trên nhiều khía cạnh thay vì chỉ xét một loại tài nguyên duy nhất.
-
-## 2.2. Khó khăn trong việc lựa chọn yêu cầu tối ưu
-
-Không phải yêu cầu nào có giá trị cao nhất cũng nên được ưu tiên chọn. Một yêu cầu có giá trị lớn nhưng tiêu tốn quá nhiều CPU, RAM hoặc băng thông có thể làm giảm khả năng phục vụ các yêu cầu khác. Ngược lại, nhiều yêu cầu nhỏ có thể đem lại tổng giá trị cao hơn nếu chúng sử dụng tài nguyên hiệu quả hơn.
-
-Do đó, hệ thống cần giải quyết bài toán lựa chọn tổ hợp. Với $N$ yêu cầu, mỗi yêu cầu có hai trạng thái là chọn hoặc không chọn, số phương án có thể lên tới $2^N$. Khi số lượng yêu cầu tăng, không gian tìm kiếm tăng rất nhanh, khiến việc tìm nghiệm tối ưu trở nên khó khăn nếu chỉ sử dụng phương pháp duyệt vét cạn.
-
-## 2.3. Bài toán thuộc nhóm khó về mặt tính toán
-
-Bài toán cái túi đa chiều là một bài toán tối ưu tổ hợp khó. Khi số lượng yêu cầu và số lượng ràng buộc tăng lên, thời gian tính toán để tìm nghiệm tối ưu cũng tăng mạnh. Trong môi trường điện toán đám mây thực tế, số lượng yêu cầu có thể rất lớn và thay đổi liên tục theo thời gian, do đó hệ thống không chỉ cần tìm nghiệm tốt mà còn phải đưa ra quyết định nhanh.
-
-Nếu thuật toán tối ưu mất quá nhiều thời gian, hệ thống có thể không phản ứng kịp với các yêu cầu mới. Điều này đặc biệt nghiêm trọng trong các hệ thống yêu cầu thời gian thực hoặc gần thời gian thực, nơi quyết định cấp phát tài nguyên cần được thực hiện nhanh chóng.
-
-## 2.4. Nhu cầu tài nguyên thay đổi liên tục
-
-Trong điện toán đám mây, nhu cầu sử dụng tài nguyên không cố định. Lưu lượng truy cập, số lượng người dùng, số lượng tác vụ và khối lượng dữ liệu có thể thay đổi theo giờ, theo ngày hoặc theo các sự kiện đặc biệt. Chẳng hạn, một hệ thống thương mại điện tử có thể cần nhiều tài nguyên hơn trong các đợt khuyến mãi, trong khi một hệ thống học trực tuyến có thể tăng tải vào giờ học cao điểm.
-
-Sự biến động này làm cho việc lập kế hoạch và tối ưu phân bổ tài nguyên trở nên khó khăn. Nếu cấp phát thiếu tài nguyên, hệ thống có thể bị quá tải, làm tăng thời gian phản hồi hoặc gây gián đoạn dịch vụ. Nếu cấp phát quá nhiều tài nguyên, hệ thống sẽ lãng phí và làm tăng chi phí vận hành.
-
-## 2.5. Sự khác nhau về đặc điểm của các yêu cầu
-
-Các yêu cầu trong hệ thống đám mây có thể rất khác nhau về nhu cầu tài nguyên và mức độ ưu tiên. Một yêu cầu có thể là máy ảo phục vụ cơ sở dữ liệu cần nhiều RAM, trong khi yêu cầu khác là container xử lý tính toán cần nhiều CPU. Một dịch vụ truyền thông hoặc streaming lại có thể cần nhiều băng thông mạng.
-
-Sự không đồng nhất này khiến việc so sánh và lựa chọn yêu cầu trở nên khó khăn. Hệ thống cần có tiêu chí đánh giá phù hợp, chẳng hạn giá trị trên mỗi đơn vị tài nguyên, mức độ ưu tiên, doanh thu, thời hạn xử lý hoặc mức độ ảnh hưởng đến chất lượng dịch vụ.
-
-## 2.6. Đảm bảo chất lượng dịch vụ
-
-Trong điện toán đám mây, nhà cung cấp thường phải đảm bảo các cam kết chất lượng dịch vụ như thời gian phản hồi, độ sẵn sàng, độ ổn định và thông lượng xử lý. Nếu việc phân bổ tài nguyên không hợp lý, hệ thống có thể chấp nhận quá nhiều yêu cầu vượt quá khả năng xử lý, dẫn đến giảm hiệu năng và vi phạm SLA.
-
-Vì vậy, bài toán tối ưu không chỉ nhằm tối đa hóa giá trị thu được, mà còn phải đảm bảo các yêu cầu được chấp nhận có thể được phục vụ ổn định trong giới hạn tài nguyên hiện có.
-
-## 2.7. Cân bằng giữa hiệu năng và chi phí
-
-Một trong những mục tiêu quan trọng của quản lý tài nguyên đám mây là cân bằng giữa hiệu năng và chi phí. Nếu hệ thống sử dụng quá ít tài nguyên, hiệu năng có thể bị suy giảm. Nếu duy trì quá nhiều tài nguyên dự phòng, chi phí vận hành sẽ tăng.
-
-Trong bài toán tối ưu với ràng buộc CPU, RAM và băng thông, hệ thống cần tìm phương án phân bổ sao cho tài nguyên được sử dụng hiệu quả nhất. Điều này có nghĩa là hạn chế tài nguyên nhàn rỗi, tránh quá tải và ưu tiên các yêu cầu đem lại giá trị cao so với lượng tài nguyên tiêu thụ.
+* **Tài nguyên hệ thống có giới hạn và nhiều ràng buộc đồng thời:** Hệ thống phải quản lý và thỏa mãn cùng lúc CPU, RAM và băng thông.
+* **Khó khăn trong việc lựa chọn yêu cầu tối ưu:** Việc chọn yêu cầu có giá trị cao nhất chưa chắc đem lại tổng giá trị tối ưu do chúng tiêu hao nhiều tài nguyên.
+* **Bài toán thuộc nhóm khó về mặt tính toán (NP-hard):** Số lượng tổ hợp tăng lũy thừa $2^N$ theo số lượng yêu cầu $N$, gây khó khăn cho việc tính toán nhanh.
+* **Nhu cầu tài nguyên thay đổi liên tục:** Tải của hệ thống biến động liên tục theo thời gian thực.
+* **Sự khác nhau về đặc điểm của các yêu cầu:** Các loại máy ảo/container có yêu cầu tài nguyên không đồng nhất.
+* **Đảm bảo chất lượng dịch vụ (SLA):** Tránh việc cấp phát vượt ngưỡng làm suy giảm hiệu năng hệ thống.
+* **Cân bằng giữa hiệu năng và chi phí:** Hạn chế lãng phí tài nguyên nhàn rỗi trong khi vẫn đảm bảo hiệu suất hoạt động.
 
 ---
 
 # 3. Hướng giải pháp cho bài toán
 
-## 3.1. Mô hình hóa bài toán dưới dạng cái túi đa chiều
+* **Mô hình hóa bài toán dưới dạng cái túi đa chiều (MKP):** Phát biểu toán học để tìm vector quyết định tối ưu hóa giá trị trong các ràng buộc tài nguyên.
+* **Sử dụng thuật toán vét cạn cho bộ dữ liệu nhỏ:** Duyệt qua toàn bộ tổ hợp con của tập yêu cầu để đảm bảo tìm nghiệm tối ưu tuyệt đối.
+* **Sử dụng quy hoạch động khi tài nguyên có miền giá trị vừa phải:** Giải quyết bài toán bằng bảng phương án trạng thái tối ưu hóa bộ nhớ qua hashmap.
+* **Sử dụng thuật toán nhánh cận để giảm không gian tìm kiếm:** Xây dựng cây tìm kiếm và cắt tỉa các nhánh không triển vọng.
+* **Sử dụng thuật toán tham lam để tìm nghiệm nhanh:** Định nghĩa điểm số ưu tiên ($score_i$) dựa trên tài nguyên chuẩn hóa để sắp xếp và chọn nhanh ứng viên.
+* **Kết hợp giám sát tài nguyên theo thời gian thực:** Theo dõi các mức tải thực tế để cập nhật giới hạn tài nguyên khả dụng.
+* **Tự động mở rộng và thu hồi tài nguyên (Auto-scaling):** Tăng/giảm node vật lý dựa trên nhu cầu của các yêu cầu.
+* **Đánh giá nghiệm dựa trên nhiều tiêu chí:** Xem xét đa chiều (tổng giá trị, độ tải tài nguyên, thời gian chạy) để so sánh các giải thuật.
 
-Hướng giải pháp đầu tiên là mô hình hóa bài toán quản lý tài nguyên thành bài toán tối ưu tổ hợp dạng cái túi đa chiều. Mỗi yêu cầu VM hoặc container được xem như một vật phẩm cần lựa chọn. Các tài nguyên CPU, RAM và băng thông được xem như các chiều ràng buộc của cái túi. Giá trị $v_i$ biểu diễn lợi ích khi chấp nhận yêu cầu.
-
-Cách mô hình hóa này giúp bài toán trở nên rõ ràng về mặt toán học. Hệ thống cần tìm vector quyết định:
-
-$$X = (x_1, x_2, ..., x_N)$$
-
-sao cho tổng giá trị:
-
-$$\sum_{i=1}^{N} v_i x_i$$
-
-là lớn nhất, đồng thời không vi phạm các ràng buộc:
-
-$$\sum_{i=1}^{N} c_i x_i \leq C_{max}$$
-
-$$\sum_{i=1}^{N} r_i x_i \leq R_{max}$$
-
-$$\sum_{i=1}^{N} b_i x_i \leq B_{max}$$
-
-Nhờ mô hình này, ta có thể áp dụng các thuật toán tối ưu hóa đã biết để giải quyết bài toán.
-
-## 3.2. Sử dụng thuật toán vét cạn cho bộ dữ liệu nhỏ
-
-Với số lượng yêu cầu nhỏ, có thể sử dụng phương pháp vét cạn để kiểm tra toàn bộ các tổ hợp chọn hoặc không chọn. Phương pháp này đảm bảo tìm được nghiệm tối ưu tuyệt đối vì mọi khả năng đều được xét.
-
-Tuy nhiên, độ phức tạp của phương pháp vét cạn là $O(2^N)$, nên chỉ phù hợp với các bộ dữ liệu nhỏ như $N=5$ hoặc $N=10$. Khi số lượng yêu cầu tăng lên, số tổ hợp cần kiểm tra trở nên rất lớn, khiến phương pháp này không còn hiệu quả trong thực tế.
-
-## 3.3. Sử dụng quy hoạch động khi tài nguyên có miền giá trị vừa phải
-
-Quy hoạch động là một hướng giải phù hợp khi các giới hạn tài nguyên như $C_{max}$, $R_{max}$ và $B_{max}$ không quá lớn. Ý tưởng là xây dựng bảng trạng thái theo số lượng yêu cầu đã xét và lượng tài nguyên đã sử dụng. Mỗi trạng thái lưu giá trị tốt nhất có thể đạt được.
-
-Đối với bài toán có ba ràng buộc CPU, RAM và băng thông, trạng thái có thể được biểu diễn dưới dạng:
-
-$$DP[i][c][r][b]$$
-
-Trong đó, $i$ là số yêu cầu đầu tiên được xét, còn $c$, $r$, $b$ lần lượt là lượng CPU, RAM và băng thông đã sử dụng hoặc còn lại. Công thức chuyển trạng thái sẽ xét hai khả năng: không chọn yêu cầu hiện tại hoặc chọn yêu cầu hiện tại nếu còn đủ tài nguyên.
-
-Ưu điểm của quy hoạch động là có thể tìm nghiệm tối ưu. Tuy nhiên, nhược điểm là bộ nhớ và thời gian tính toán tăng nhanh theo tích của các giới hạn tài nguyên:
-
-$$O(N \times C_{max} \times R_{max} \times B_{max})$$
-
-Do đó, phương pháp này phù hợp với các bài toán có kích thước vừa phải hoặc dữ liệu đã được rời rạc hóa hợp lý.
-
-## 3.4. Sử dụng thuật toán nhánh cận để giảm không gian tìm kiếm
-
-Thuật toán nhánh cận có thể được dùng để tìm nghiệm tối ưu nhưng tránh phải duyệt toàn bộ không gian nghiệm. Ý tưởng là xây dựng cây tìm kiếm, trong đó mỗi mức tương ứng với quyết định chọn hoặc không chọn một yêu cầu. Tại mỗi nhánh, thuật toán tính cận trên của giá trị có thể đạt được. Nếu cận trên của một nhánh không tốt hơn nghiệm hiện tại, nhánh đó sẽ bị loại bỏ.
-
-Phương pháp này giúp giảm đáng kể số lượng phương án cần xét so với vét cạn, đặc biệt khi có chiến lược sắp xếp yêu cầu tốt, chẳng hạn sắp xếp theo tỷ lệ giá trị trên tài nguyên tiêu thụ. Tuy nhiên, trong trường hợp xấu nhất, nhánh cận vẫn có thể có độ phức tạp lớn.
-
-## 3.5. Sử dụng thuật toán tham lam để tìm nghiệm nhanh
-
-Trong các hệ thống cần ra quyết định nhanh, thuật toán tham lam là một lựa chọn thực tế. Thuật toán có thể sắp xếp các yêu cầu theo một tiêu chí ưu tiên, sau đó lần lượt chọn các yêu cầu nếu hệ thống còn đủ CPU, RAM và băng thông.
-
-Một tiêu chí tham lam có thể là:
-
-$$score_i = \frac{v_i}{\alpha c_i + \beta r_i + \gamma b_i}$$
-
-Trong đó $\alpha$, $\beta$, $\gamma$ là các hệ số phản ánh mức độ quan trọng hoặc mức độ khan hiếm của từng loại tài nguyên. Yêu cầu có điểm số cao hơn sẽ được ưu tiên chọn trước.
-
-Ưu điểm của phương pháp tham lam là đơn giản, tốc độ nhanh và dễ triển khai. Nhược điểm là không đảm bảo luôn tìm được nghiệm tối ưu toàn cục, vì quyết định tốt tại từng bước chưa chắc dẫn đến phương án tốt nhất tổng thể.
-
-## 3.6. Kết hợp giám sát tài nguyên theo thời gian thực
-
-Để bài toán tối ưu có ý nghĩa trong môi trường đám mây thực tế, hệ thống cần có cơ chế giám sát tài nguyên theo thời gian thực. Các thông tin cần theo dõi gồm:
-
-- Mức sử dụng CPU hiện tại.
-- Mức sử dụng RAM hiện tại.
-- Lưu lượng băng thông đang dùng.
-- Số lượng VM/container đang chạy.
-- Thời gian phản hồi của dịch vụ.
-- Số lượng yêu cầu đang chờ xử lý.
-
-Dữ liệu giám sát giúp hệ thống xác định chính xác giá trị hiện tại của $C_{max}$, $R_{max}$ và $B_{max}$ còn khả dụng. Từ đó, thuật toán tối ưu có thể đưa ra quyết định cấp phát phù hợp hơn.
-
-## 3.7. Tự động mở rộng và thu hồi tài nguyên
-
-Bên cạnh việc lựa chọn yêu cầu trong giới hạn tài nguyên hiện có, hệ thống có thể kết hợp cơ chế tự động mở rộng. Khi nhu cầu tăng cao và nhiều yêu cầu có giá trị lớn không thể được phục vụ, hệ thống có thể mở rộng thêm máy ảo, container hoặc node mới để tăng $C_{max}$, $R_{max}$ và $B_{max}$.
-
-Ngược lại, khi tải giảm, hệ thống có thể thu hồi các tài nguyên dư thừa để tiết kiệm chi phí. Cơ chế này giúp hệ thống duy trì sự cân bằng giữa hiệu năng và chi phí vận hành.
-
-## 3.8. Đánh giá nghiệm dựa trên nhiều tiêu chí
-
-Một phương án phân bổ tài nguyên tốt không chỉ là phương án có tổng giá trị lớn nhất, mà còn cần được đánh giá theo nhiều tiêu chí khác như:
-
-- Tổng giá trị thu được.
-- Tỷ lệ sử dụng CPU.
-- Tỷ lệ sử dụng RAM.
-- Tỷ lệ sử dụng băng thông.
-- Số lượng yêu cầu được chấp nhận.
-- Lượng tài nguyên còn dư.
-- Mức độ cân bằng giữa các loại tài nguyên.
-- Thời gian chạy của thuật toán.
-
-Việc đánh giá đa tiêu chí giúp so sánh các thuật toán khác nhau và lựa chọn phương pháp phù hợp với từng tình huống thực tế.
 
 ---
 
-# 4. Kết luận
+# 4. Hướng dẫn cài đặt môi trường
 
-_(Nội dung kết luận sẽ được bổ sung)_
+## 4.1. Yêu cầu hệ thống
 
----
-
-# 5. Hướng dẫn cài đặt môi trường
-
-## 5.1. Yêu cầu hệ thống
-
-| Thành phần | Yêu cầu tối thiểu | Ghi chú |
+| Thành phân | Yêu cầu tối thiểu | Ghi chú |
 |---|---|---|
 | **Hệ điều hành** | Windows, Linux hoặc macOS | Windows cần cài MSYS2 để có môi trường tương thích |
 | **Trình biên dịch C++** | `g++` hỗ trợ chuẩn **C++17** | GCC ≥ 7.0 hoặc Clang ≥ 5.0 |
@@ -214,7 +88,7 @@ _(Nội dung kết luận sẽ được bổ sung)_
 | **Python 3** | Python ≥ 3.6 | Chỉ cần nếu muốn sinh file CSV thống kê |
 | **Git** | Bất kỳ phiên bản nào | Tùy chọn — có thể nhận dự án qua file ZIP |
 
-## 5.2. Cài đặt trên Windows
+## 4.2. Cài đặt trên Windows
 
 Trên Windows, cần cài **MSYS2** để có `g++`, `make` và shell bash tương thích với Makefile của dự án.
 
@@ -243,9 +117,9 @@ pacman -S --noconfirm mingw-w64-ucrt-x86_64-python
 
 > **Quan trọng:** Luôn mở **MSYS2 UCRT64** terminal để chạy các lệnh `make`, `g++` trong dự án. Không sử dụng CMD hoặc PowerShell vì chúng không tương thích với Makefile.
 
-**Cách thay thế (không cần MSYS2):** Nếu không muốn cài MSYS2, có thể biên dịch thủ công từng file bằng `g++` (xem [Mục 6.4](#64-chạy-từng-phương-pháp) — phần biên dịch thủ công).
+**Cách thay thế (không cần MSYS2):** Nếu không muốn cài MSYS2, có thể biên dịch thủ công từng file bằng `g++` (xem [Mục 5.4](#54-chạy-từng-phương-pháp) — phần biên dịch thủ công).
 
-## 5.3. Cài đặt trên Ubuntu / Debian
+## 4.3. Cài đặt trên Ubuntu / Debian
 
 ```bash
 # Cập nhật danh sách gói
@@ -258,7 +132,7 @@ sudo apt install -y build-essential git
 sudo apt install -y python3
 ```
 
-## 5.4. Cài đặt trên macOS
+## 4.4. Cài đặt trên macOS
 
 ```bash
 # Cài đặt Xcode Command Line Tools (bao gồm clang++ và make)
@@ -268,7 +142,7 @@ xcode-select --install
 brew install python3
 ```
 
-## 5.5. Lấy mã nguồn dự án
+## 4.5. Lấy mã nguồn dự án
 
 ### Cách 1: Clone từ GitHub (nếu có Git)
 
@@ -279,9 +153,9 @@ cd daa-project
 
 ### Cách 2: Tải file ZIP và giải nén
 
-Nếu bạn nhận dự án qua file ZIP (không cần cài Git):
+Nếu bạn nhận dự án qua file ZIP:
 
-1. Giải nén file ZIP vào một thư mục tùy ý.
+1. Giải nén file ZIP vào một thư mục
 2. Mở terminal (MSYS2 trên Windows, Terminal trên Linux/macOS).
 3. Di chuyển vào thư mục dự án:
 
@@ -292,7 +166,7 @@ cd /đường/dẫn/tới/daa-project
 
 > **Trên Windows (MSYS2):** Đường dẫn `C:\Users\TenBan\Desktop\daa-project` tương đương `/c/Users/TenBan/Desktop/daa-project` trong MSYS2 terminal.
 
-## 5.6. Kiểm tra môi trường
+## 4.6. Kiểm tra môi trường
 
 Chạy các lệnh sau để đảm bảo môi trường đã sẵn sàng:
 
@@ -311,9 +185,9 @@ python3 --version
 
 ---
 
-# 6. Hướng dẫn sử dụng
+# 5. Hướng dẫn sử dụng
 
-## 6.1. Cấu trúc dự án
+## 5.1. Cấu trúc dự án
 
 ```
 daa-project/
@@ -337,7 +211,7 @@ daa-project/
 └── docs/                            # Tài liệu bổ sung
 ```
 
-## 6.2. Định dạng dữ liệu đầu vào
+## 5.2. Định dạng dữ liệu đầu vào
 
 Mỗi file dữ liệu trong thư mục `data/` có định dạng:
 
@@ -362,7 +236,7 @@ B_max = 100
 - `C_max`, `R_max`, `B_max` là giới hạn tài nguyên của hệ thống.
 - Mỗi dòng dữ liệu yêu cầu gồm 5 cột: `ID  CPU  RAM  Bandwidth  Value`.
 
-## 6.3. Biên dịch dự án
+## 5.3. Biên dịch dự án
 
 ### Cách 1: Dùng Make (khuyến nghị)
 
@@ -405,9 +279,9 @@ g++ -std=c++17 -O2 -Wall -o greedy/cloud_computing greedy/cloud_computing.cpp
 > g++ -std=c++17 -O2 -Wall -o brute-force\cloud_computing.exe brute-force\cloud_computing.cpp
 > ```
 
-## 6.4. Chạy từng phương pháp
+## 5.4. Chạy từng phương pháp
 
-### 6.4.1. Phương pháp Vét cạn (Brute Force)
+### 5.4.1. Phương pháp Vét cạn (Brute Force)
 
 ```bash
 # Dùng make
@@ -418,7 +292,7 @@ make run-brute-force/cloud_computing
 brute-force\cloud_computing.exe        # Windows CMD / PowerShell
 ```
 
-### 6.4.2. Phương pháp Quy hoạch động (Dynamic Programming)
+### 5.4.2. Phương pháp Quy hoạch động (Dynamic Programming)
 
 ```bash
 # Dùng make
@@ -429,7 +303,7 @@ make run-dynamic-programing/cloud_computing
 dynamic-programing\cloud_computing.exe # Windows CMD / PowerShell
 ```
 
-### 6.4.3. Phương pháp Tham lam (Greedy)
+### 5.4.3. Phương pháp Tham lam (Greedy)
 
 ```bash
 # Dùng make
@@ -441,7 +315,7 @@ greedy\cloud_computing.exe             # Windows CMD / PowerShell
 ```
 
 
-## 6.5. Chạy tất cả các phương pháp
+## 5.5. Chạy tất cả các phương pháp
 
 ```bash
 make run-all
@@ -455,7 +329,7 @@ Lệnh này sẽ biên dịch và chạy lần lượt cả 3 phương pháp tr�
 - **Memory Usage**: bộ nhớ ước tính (bytes).
 - **Execution Time**: thời gian chạy (microseconds).
 
-## 6.6. Sinh file CSV thống kê
+## 5.6. Sinh file CSV thống kê
 
 ```bash
 make csv
@@ -476,6 +350,7 @@ Lệnh này sẽ:
 | `bandwidth_usage.csv` | So sánh mức sử dụng băng thông |
 
 Mỗi file CSV có cấu trúc: cột đầu là kích thước $N$, các cột tiếp theo là giá trị tương ứng của mỗi phương pháp (Greedy, Dynamic Programming, Brute Force).
+
 
 ---
 
